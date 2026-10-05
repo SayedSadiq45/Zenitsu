@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAYED SADIQ — AURA · Zenitsu Agatsuma</title>
+<meta name="description" content="AURA — the cinematic portfolio experience of SAYED SADIQ.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Pirata+One&family=Space+Mono:wght@400;700&family=Shippori+Mincho:wght@700;800&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   0 · TOKENS  (Zenitsu — Thunder Breathing: yellow-gold bolts,
+   white-blue cores, storm-night navy sky)
+===================================================================== */
+:root{
+  --sky:#0a0e1c; --sky-2:#060912;
+  --bolt:#ffd94a; --bolt-deep:#f0a92e;
+  --core:#eaf6ff; --blue:#7ec8ff;
+  --paper:#eef2fb;
+  --mono:'Space Mono',monospace; --disp:'Pirata One',serif;
+  --beb:'Bebas Neue',sans-serif; --kanji:'Shippori Mincho',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;background:var(--sky);}      /* NO SCROLL — button driven */
+body{color:var(--paper);font-family:var(--mono);-webkit-font-smoothing:antialiased;}
+img{display:block;}
+::selection{background:var(--bolt);color:var(--sky);}
+
+/* =====================================================================
+   1 · GLOBAL OVERLAYS  (grain · cursor)
+===================================================================== */
+.grain{position:fixed;inset:-50%;width:200%;height:200%;z-index:95;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 7s steps(8) infinite;}
+@keyframes grain{0%,100%{transform:translate(0,0)}20%{transform:translate(-5%,-6%)}40%{transform:translate(4%,-4%)}60%{transform:translate(-4%,6%)}80%{transform:translate(6%,3%)}}
+
+.cursor{position:fixed;top:0;left:0;width:16px;height:16px;border:1.5px solid var(--bolt);border-radius:50%;
+  z-index:99;pointer-events:none;transform:translate(-50%,-50%);mix-blend-mode:screen;
+  box-shadow:0 0 10px rgba(255,217,74,.6),inset 0 0 6px rgba(126,200,255,.5);transition:width .18s,height .18s;}
+.cursor::after{content:'';position:absolute;inset:5px;border-radius:50%;background:var(--core);opacity:.85;}
+@media (hover:none){.cursor{display:none;}}
+
+/* =====================================================================
+   2 · HUD  (Space Mono corner readouts)
+===================================================================== */
+.hud{position:fixed;z-index:60;left:0;right:0;pointer-events:none;font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;color:rgba(238,242,251,.5);}
+.hud--top{top:0;display:flex;justify-content:space-between;padding:18px 24px;}
+.hud--bottom{bottom:0;display:flex;justify-content:space-between;padding:18px 24px;}
+.hud b{color:var(--bolt);font-weight:400;}
+.hud .bl{color:var(--blue);}
+
+/* =====================================================================
+   3 · PRELOADER  (雷の呼吸 kanji + bar wiped by a lightning slash)
+===================================================================== */
+.pre{position:fixed;inset:0;z-index:100;background:var(--sky);display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;}
+.pre__k{font-family:var(--kanji);font-weight:800;font-size:clamp(48px,9vw,82px);color:var(--bolt);opacity:0;
+  text-shadow:0 0 34px rgba(255,217,74,.5),0 0 70px rgba(126,200,255,.25);letter-spacing:.06em;}
+.pre__sub{font-size:11px;letter-spacing:.5em;color:rgba(238,242,251,.55);text-transform:uppercase;opacity:0;}
+.pre__bar{width:180px;height:1px;background:rgba(255,255,255,.12);position:relative;overflow:hidden;}
+.pre__bar i{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,var(--bolt-deep),var(--bolt),var(--core));
+  box-shadow:0 0 12px rgba(255,217,74,.7);}
+.pre__slash{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.pre__slash::before{content:'';position:absolute;top:-20%;bottom:-20%;left:50%;width:3px;
+  background:linear-gradient(180deg,transparent,var(--core),var(--bolt),var(--core),transparent);
+  box-shadow:0 0 18px 3px rgba(255,217,74,.8);transform:translateX(-50%) rotate(16deg) scaleY(0);opacity:0;}
+.pre.slashing .pre__slash::before{animation:preSlash .34s ease-out forwards;}
+@keyframes preSlash{0%{transform:translateX(-50%) rotate(16deg) scaleY(0);opacity:1;}
+  60%{transform:translateX(-50%) rotate(16deg) scaleY(1);opacity:1;}
+  100%{opacity:0;transform:translateX(-50%) rotate(16deg) scaleY(1);}}
+
+/* =====================================================================
+   4 · THE STAGE  (single fixed 100vh scene — everything lives here)
+===================================================================== */
+.stage{position:fixed;inset:0;overflow:hidden;perspective:1300px;perspective-origin:50% 42%;
+  background:radial-gradient(120% 70% at 50% -8%,rgba(126,200,255,.10),transparent 60%),
+             radial-gradient(90% 60% at 50% 112%,rgba(255,217,74,.06),transparent 66%),
+             linear-gradient(180deg,#0a0e1c,#05070f);}
+
+/* liquid-ether fluid background (canvas) */
+.stg__ether{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.9;}
+
+/* falling text — Japanese words dropping with Zenitsu */
+.stg__falltext{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;transition:opacity .5s;}
+.stg__falltext span{position:absolute;top:-14%;left:var(--fx);font-family:var(--kanji);font-weight:800;
+  font-size:clamp(18px,2.4vw,40px);color:rgba(126,200,255,.55);writing-mode:vertical-rl;letter-spacing:.12em;
+  text-shadow:0 0 18px rgba(126,200,255,.55),0 0 40px rgba(126,200,255,.25);white-space:nowrap;
+  animation:fallDrop 9s linear infinite;animation-delay:var(--fd);}
+@keyframes fallDrop{0%{transform:translateY(0);opacity:0}
+  8%{opacity:1}88%{opacity:1}100%{transform:translateY(122vh);opacity:0}}
+
+/* blue thunder aura around the falling figure */
+.stg__aura{position:absolute;inset:0;z-index:7;pointer-events:none;mix-blend-mode:screen;
+  opacity:0;transition:opacity .5s;}
+
+/* drifting storm clouds */
+.stg__clouds{position:absolute;inset:-10% 0;z-index:1;pointer-events:none;}
+.stg__cloud{position:absolute;border-radius:50%;filter:blur(48px);opacity:.5;mix-blend-mode:screen;}
+.stg__cloud.c1{left:-8%;top:8%;width:60vw;height:40vh;background:radial-gradient(ellipse,rgba(80,110,170,.55),transparent 70%);animation:cloud 34s linear infinite;}
+.stg__cloud.c2{right:-6%;top:38%;width:52vw;height:36vh;background:radial-gradient(ellipse,rgba(60,80,140,.5),transparent 70%);animation:cloud 46s linear infinite reverse;}
+.stg__cloud.c3{left:14%;bottom:4%;width:70vw;height:40vh;background:radial-gradient(ellipse,rgba(40,58,110,.5),transparent 72%);animation:cloud 58s linear infinite;}
+@keyframes cloud{0%{transform:translateX(-4%)}50%{transform:translateX(6%)}100%{transform:translateX(-4%)}}
+
+/* floating kanji (scene-0 ambience) */
+.stg__glyphs{position:absolute;inset:0;z-index:2;pointer-events:none;font-family:var(--kanji);font-weight:800;
+  mix-blend-mode:screen;transition:opacity .6s;}
+.stg__glyphs span{position:absolute;writing-mode:vertical-rl;letter-spacing:.16em;opacity:.5;
+  text-shadow:0 0 20px rgba(126,200,255,.4),0 0 40px rgba(255,217,74,.2);animation:floaty 7s ease-in-out infinite;}
+.stg__glyphs .k1{left:7vw;top:10vh;font-size:clamp(40px,9vw,140px);color:rgba(255,217,74,.5);}
+.stg__glyphs .k2{right:8vw;top:16vh;font-size:clamp(26px,5vw,80px);color:rgba(126,200,255,.5);animation-delay:-2s;}
+.stg__glyphs .k3{left:19vw;bottom:12vh;font-size:clamp(20px,3vw,44px);color:rgba(238,242,251,.32);animation-delay:-4s;}
+.stg__glyphs .k4{right:21vw;bottom:16vh;font-size:clamp(20px,3vw,44px);color:rgba(238,242,251,.30);animation-delay:-1s;}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+
+/* speed-lines / wind canvas */
+.stg__wind{position:absolute;inset:0;z-index:3;pointer-events:none;mix-blend-mode:screen;}
+
+/* floating dust / spark particles (bg) */
+.stg__particles{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .6s;}
+
+/* hero title (BEHIND the falling figure) */
+.stg__hero{position:absolute;left:0;right:0;top:65%;z-index:4;transform:translateY(-50%);text-align:center;
+  pointer-events:none;padding:0 20px;}          /* opacity/filter driven by GSAP — no CSS transition (would fight it) */
+.stg__hero .ik{display:block;font-family:var(--kanji);font-weight:800;font-size:clamp(28px,6vw,64px);
+  color:var(--bolt);text-shadow:0 0 30px rgba(255,217,74,.45),0 0 60px rgba(126,200,255,.2);margin-bottom:8px;letter-spacing:.1em;}
+.stg__hero h1{font-family:var(--disp);font-size:clamp(40px,10vw,100px);line-height:.92;letter-spacing:.02em;color:var(--paper);
+  text-shadow:0 6px 34px rgba(0,0,0,.7),0 0 60px rgba(126,200,255,.25);}
+.stg__hero h1.identity-name{font-family:var(--beb);font-size:clamp(52px,12vw,128px);letter-spacing:.08em;line-height:.82;
+  text-shadow:0 0 16px rgba(255,217,74,.34),0 0 44px rgba(126,200,255,.32),0 10px 34px rgba(0,0,0,.72);
+  animation:nameAura 3.8s ease-in-out infinite;}
+.stg__hero h1.identity-name em{letter-spacing:.04em;}
+@keyframes nameAura{0%,100%{filter:drop-shadow(0 0 10px rgba(255,217,74,.26));}
+  50%{filter:drop-shadow(0 0 28px rgba(255,217,74,.72)) drop-shadow(0 0 54px rgba(126,200,255,.3));}}
+.stg__hero h1 em{font-style:normal;background:linear-gradient(178deg,var(--core) 0%,var(--bolt) 55%,var(--bolt-deep) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 14px rgba(255,217,74,.5));
+  animation:charge 8s infinite;}
+@keyframes charge{0%,90%,100%{filter:drop-shadow(0 2px 14px rgba(255,217,74,.5));}
+  90.8%{filter:drop-shadow(0 0 24px rgba(234,246,255,.95)) brightness(1.5);}
+  91.6%{filter:drop-shadow(0 2px 14px rgba(255,217,74,.5));}
+  92.6%{filter:drop-shadow(0 0 32px rgba(255,255,255,1)) brightness(1.7);}
+  93.6%{filter:drop-shadow(0 2px 14px rgba(255,217,74,.5));}}
+.stg__hero p{margin-top:14px;font-size:10.5px;letter-spacing:.4em;text-transform:uppercase;color:rgba(238,242,251,.55);}
+.stg__hero .identity-role{margin-top:18px;color:var(--bolt);font-size:10px;letter-spacing:.34em;}
+.profile-links{position:fixed;right:24px;top:52px;z-index:61;display:flex;gap:8px;align-items:center;}
+.profile-links a{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border:1px solid rgba(255,217,74,.42);border-radius:999px;
+  color:var(--paper);background:rgba(6,9,18,.5);font-size:9px;letter-spacing:.16em;text-decoration:none;text-transform:uppercase;
+  box-shadow:0 0 14px rgba(255,217,74,.1);transition:color .2s,border-color .2s,box-shadow .2s,transform .2s;}
+.profile-links a:hover,.profile-links a:focus-visible{color:var(--bolt);border-color:var(--bolt);box-shadow:0 0 20px rgba(255,217,74,.4);transform:translateY(-2px);outline:none;}
+
+/* SPLIT REVEAL layer (top.png sleeping ↔ bottom.png awakened) — scene 3 */
+.stg__split{position:absolute;inset:0;z-index:5;opacity:0;pointer-events:none;}
+.stg__split img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 28%;}
+.stg__split .top{z-index:2;will-change:clip-path;}
+.stg__split .veil{position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 42%,rgba(4,6,13,.62) 100%);}
+.stg__split .line{position:absolute;top:-30%;left:0;height:160%;width:3px;z-index:6;pointer-events:none;will-change:transform,opacity;
+  background:linear-gradient(180deg,transparent,var(--core) 12%,var(--bolt) 50%,var(--core) 88%,transparent);
+  box-shadow:0 0 12px 2px rgba(234,246,255,.8),0 0 26px 6px rgba(255,217,74,.5);
+  transform:translateX(-50vw) rotate(16deg);transform-origin:center;}
+.stg__split .spk{position:absolute;inset:0;z-index:7;pointer-events:none;mix-blend-mode:screen;}
+.stg__split .card{position:absolute;bottom:96px;z-index:8;pointer-events:none;width:min(280px,42vw);padding:16px 18px;
+  background:linear-gradient(180deg,rgba(10,14,28,.55),rgba(10,14,28,.22));border-radius:8px;}
+.stg__split .card .k{display:block;font-family:var(--beb);font-size:12px;letter-spacing:.4em;text-transform:uppercase;margin-bottom:6px;}
+.stg__split .card h3{font-family:var(--disp);font-size:clamp(22px,3.2vw,40px);line-height:1;color:var(--paper);}
+.stg__split .card p{font-size:11px;color:rgba(238,242,251,.6);margin-top:6px;line-height:1.6;}
+.stg__split .card::before{content:'';position:absolute;inset:0;border-radius:8px;pointer-events:none;
+  border:1px solid rgba(255,217,74,.32);box-shadow:0 0 14px rgba(255,217,74,.16),inset 0 0 20px rgba(126,200,255,.06);
+  animation:elecBorder 2.8s steps(2,end) infinite;}
+.stg__split .card--r{right:44px;text-align:right;}.stg__split .card--r .k{color:var(--bolt);}
+.stg__split .card--r::before{animation-delay:1.2s;}
+.stg__split .card--l{left:44px;text-align:left;}.stg__split .card--l .k{color:var(--blue);}
+.stg__split .card--l::before{animation-delay:.4s;}
+/* giant faded Japanese behind the split reveal */
+.stg__split .split__kanji{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);z-index:4;
+  font-family:var(--kanji);font-weight:800;font-size:clamp(90px,19vw,260px);writing-mode:vertical-rl;
+  color:rgba(255,217,74,.10);letter-spacing:.04em;pointer-events:none;
+  text-shadow:0 0 60px rgba(126,200,255,.14);}
+@keyframes elecBorder{0%,100%{border-color:rgba(255,217,74,.32);box-shadow:0 0 14px rgba(255,217,74,.16),inset 0 0 20px rgba(126,200,255,.06);}
+  46%{border-color:rgba(255,217,74,.32);}48%{border-color:rgba(234,246,255,.9);box-shadow:0 0 26px rgba(255,217,74,.6),inset 0 0 24px rgba(126,200,255,.2);}
+  50%{border-color:rgba(255,217,74,.32);}76%{border-color:rgba(126,200,255,.6);}78%{border-color:rgba(255,217,74,.32);}}
+
+/* the two Zenitsu figures share the stage centre; positioned by JS */
+.stg__fig{position:absolute;left:50%;top:30%;z-index:8;will-change:transform,filter,opacity;pointer-events:none;}
+.stg__fig img{width:auto;display:block;}
+#figFall{height:82vh;}                              /* falling.png — stays LARGE */
+#figFall img{height:82vh;width:auto;filter:drop-shadow(0 24px 44px rgba(0,0,0,.7));}
+#figHoriz{width:min(78vw,1000px);opacity:0;}        /* horizontal-run.png — big, with shadow */
+#figHoriz .lead-img{position:relative;z-index:4;width:100%;
+  filter:drop-shadow(28px 34px 40px rgba(0,0,0,.85)) drop-shadow(0 0 30px rgba(255,217,74,.35));}
+/* motion-trail ghosts — faded copies behind, offset left, bobbing → "running" */
+#figHoriz .ghost{position:absolute;top:0;left:0;width:100%;pointer-events:none;mix-blend-mode:screen;
+  filter:drop-shadow(0 0 22px rgba(126,200,255,.45)) brightness(1.15);}
+#figHoriz .g1{z-index:3;opacity:.34;transform:translateX(-6%);}
+#figHoriz .g2{z-index:2;opacity:.2;transform:translateX(-12%);}
+#figHoriz .g3{z-index:1;opacity:.11;transform:translateX(-18%);}
+#figHoriz.no-trail .ghost{opacity:0!important;}
+
+/* IMPACT / running headline (scene 1) */
+.stg__impact{position:absolute;left:0;right:0;top:11%;z-index:7;text-align:center;padding:0 20px;
+  opacity:0;pointer-events:none;}
+.stg__impact .ik{display:block;font-family:var(--kanji);font-weight:800;font-size:clamp(18px,3vw,30px);
+  color:var(--bolt);letter-spacing:.2em;text-shadow:0 0 24px rgba(255,217,74,.5);margin-bottom:6px;}
+.stg__impact h2{font-family:var(--disp);font-size:clamp(30px,7vw,84px);line-height:.92;color:var(--paper);
+  text-shadow:0 4px 26px rgba(0,0,0,.7),0 0 50px rgba(126,200,255,.25);}
+.stg__impact h2 em{font-style:normal;background:linear-gradient(178deg,var(--core),var(--bolt) 60%,var(--bolt-deep));
+  -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 12px rgba(255,217,74,.5));}
+.stg__impact .lead{max-width:620px;margin:14px auto 0;font-size:12px;line-height:1.8;letter-spacing:.04em;
+  color:rgba(238,242,251,.72);}
+.stg__impact .stats{list-style:none;display:flex;gap:clamp(18px,4vw,40px);justify-content:center;margin-top:22px;}
+.stg__impact .stats li{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.stg__impact .stats b{font-family:var(--kanji);font-size:clamp(20px,3vw,30px);color:var(--bolt);font-weight:800;
+  text-shadow:0 0 18px rgba(255,217,74,.4);}
+.stg__impact .stats span{font-size:9px;letter-spacing:.28em;color:rgba(238,242,251,.5);text-transform:uppercase;}
+
+/* 3D ground crack plane */
+.stg__floor{position:absolute;left:50%;bottom:-2vh;z-index:6;width:150vw;height:58vh;
+  transform:translateX(-50%) rotateX(60deg);transform-origin:50% 100%;pointer-events:none;opacity:0;}
+.stg__floor canvas{width:100%;height:100%;}
+
+/* impact fx */
+.stg__bolt{position:absolute;inset:0;z-index:9;pointer-events:none;mix-blend-mode:screen;}
+.stg__shock{position:absolute;left:50%;bottom:8vh;z-index:9;width:24px;height:24px;border-radius:50%;
+  transform:translate(-50%,50%) scale(0);opacity:0;pointer-events:none;
+  border:2px solid rgba(234,246,255,.9);box-shadow:0 0 40px 6px rgba(255,217,74,.55),0 0 90px 22px rgba(126,200,255,.28);}
+.stg__flash{position:absolute;inset:0;z-index:10;pointer-events:none;opacity:0;mix-blend-mode:screen;
+  background:linear-gradient(0deg,#fff7dd 0%,#eaf6ff 40%,transparent 88%);}
+
+/* =====================================================================
+   5 · NAV BUTTONS  (replace scroll)
+===================================================================== */
+.nav{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:40;display:flex;gap:16px;align-items:center;}
+.nav button{display:flex;align-items:center;justify-content:center;width:52px;height:52px;color:var(--paper);
+  background:linear-gradient(180deg,rgba(10,14,28,.72),rgba(10,14,28,.4));border:1px solid rgba(255,217,74,.4);
+  border-radius:50%;cursor:pointer;transition:.2s;box-shadow:0 0 14px rgba(255,217,74,.16);overflow:hidden;}
+.nav button:hover:not(:disabled){border-color:var(--core);box-shadow:0 0 22px rgba(255,217,74,.5);color:var(--bolt);}
+.nav button:disabled{opacity:.28;cursor:default;box-shadow:none;}
+.nav .arw{font-family:var(--beb);font-size:28px;line-height:1;display:inline-block;
+  text-shadow:0 0 12px rgba(255,217,74,.55);}
+.nav .arw--r{animation:nudgeR 1.05s ease-in-out infinite;}
+.nav .arw--l{animation:nudgeL 1.05s ease-in-out infinite;}
+.nav button:disabled .arw{animation:none;}
+@keyframes nudgeR{0%,100%{transform:translateX(-3px);opacity:.7}50%{transform:translateX(4px);opacity:1}}
+@keyframes nudgeL{0%,100%{transform:translateX(3px);opacity:.7}50%{transform:translateX(-4px);opacity:1}}
+.nav .meta{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:150px;}
+.nav .dots{display:flex;gap:8px;}
+.nav .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:.25s;}
+.nav .dot.on{background:var(--bolt);box-shadow:0 0 10px var(--bolt);}
+.nav .label{font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;color:rgba(238,242,251,.6);text-transform:uppercase;}
+
+.hint{position:fixed;left:50%;top:20px;transform:translateX(-50%);z-index:41;font-size:10px;letter-spacing:.3em;
+  color:#fff;background:rgba(0,0,0,.5);padding:7px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.14);
+  text-transform:uppercase;opacity:0;transition:opacity .5s;pointer-events:none;}
+
+/* =====================================================================
+   5b · LIGHT THEME  (scene 0 · THE FALL — greyish-white gradient sky)
+   Toggled by body.light so scenes 1/2 keep their dark cinematic look.
+===================================================================== */
+body.light .stage{
+  background:
+    radial-gradient(120% 82% at 50% -12%,rgba(255,210,110,.32),transparent 56%),
+    radial-gradient(96% 72% at 50% 116%,rgba(150,168,205,.34),transparent 62%),
+    linear-gradient(180deg,#f4f5f8 0%,#e6e9f0 42%,#d2d7e1 78%,#c3c9d5 100%);
+}
+/* HUD readouts */
+body.light .hud{color:rgba(34,44,66,.62);}
+body.light .hud b{color:#c07d12;}
+body.light .hud .bl{color:#356399;}
+/* hero title */
+body.light .stg__hero h1{color:#1b2336;text-shadow:0 4px 22px rgba(120,140,180,.35),0 1px 0 rgba(255,255,255,.4);}
+body.light .stg__hero .ik{color:#c07d12;text-shadow:0 0 18px rgba(255,190,70,.35);}
+body.light .stg__hero h1 em{background:linear-gradient(178deg,#f0a92e 0%,#e0870f 58%,#b0620a 100%);
+  -webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 2px 10px rgba(240,170,50,.45));}
+body.light .stg__hero p{color:rgba(38,50,74,.62);}
+/* floating ambient kanji */
+body.light .stg__glyphs{mix-blend-mode:normal;}
+body.light .stg__glyphs span{text-shadow:0 2px 12px rgba(140,155,190,.3);}
+body.light .stg__glyphs .k1{color:rgba(192,125,18,.32);}
+body.light .stg__glyphs .k2{color:rgba(53,99,153,.30);}
+body.light .stg__glyphs .k3,body.light .stg__glyphs .k4{color:rgba(40,52,76,.22);}
+/* falling text — drops with Zenitsu */
+body.light .stg__falltext span{color:rgba(46,62,98,.6);
+  text-shadow:0 2px 10px rgba(130,148,185,.35),0 0 22px rgba(120,140,180,.2);}
+/* cursor + nav on light bg */
+body.light .cursor{border-color:#c07d12;box-shadow:0 0 10px rgba(240,170,50,.5);}
+body.light .cursor::after{background:#c07d12;opacity:.8;}
+body.light .nav .label{color:rgba(40,52,76,.7);}
+body.light .nav .dot{background:rgba(40,52,76,.22);}
+
+/* =====================================================================
+   6 · RESPONSIVE + REDUCED MOTION
+===================================================================== */
+@media (max-width:760px){
+  .hud--top,.hud--bottom{padding:12px 14px;font-size:8.5px;}
+  .profile-links{right:14px;top:43px;gap:5px;}
+  .profile-links a{min-height:26px;padding:0 8px;font-size:8px;letter-spacing:.1em;}
+  #figFall,#figFall img{height:62vh;}
+  #figHoriz{width:104vw;}
+  .stg__glyphs .k3,.stg__glyphs .k4{display:none;}
+  .nav button{padding:9px 16px;font-size:13px;}
+  .stg__split .card{width:44vw;padding:11px;}
+}
+@media (prefers-reduced-motion:reduce){
+  .grain,.stg__cloud,.stg__glyphs span,.stg__hero h1 em,.stg__split .card::before,
+  #figHoriz .ghost,.nav .arw{animation:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- global overlays -->
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" id="cursor" aria-hidden="true"></div>
+
+<!-- PRELOADER -->
+<div class="pre" id="pre" aria-hidden="true">
+  <div class="pre__k">雷の呼吸</div>
+  <div class="pre__sub">THUNDER BREATHING · AGATSUMA ZENITSU</div>
+  <div class="pre__bar"><i id="preFill"></i></div>
+  <div class="pre__slash"></div>
+</div>
+
+<!-- HUD -->
+<div class="hud hud--top">
+  <span>BREATH: <b>THUNDER</b></span>
+  <span id="hudClock">--:--:--</span>
+</div>
+<div class="hud hud--bottom">
+  <span class="bl" id="hudState">STATE: DESCENDING</span>
+  <span>FORM: ONE — <b>壱ノ型</b></span>
+</div>
+
+<div class="profile-links" aria-label="Sayed Sadiq links">
+  <a href="https://zenitsu-aura-sayed-sadiq.vercel.app/" target="_blank" rel="noopener noreferrer">Website</a>
+  <a href="https://www.linkedin.com/in/sayed-sadiq45/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+  <a href="https://github.com/SayedSadiq45" target="_blank" rel="noopener noreferrer">GitHub</a>
+</div>
+
+<!-- ================= THE STAGE ================= -->
+<main class="stage" id="stage">
+  <!-- liquid-ether fluid background -->
+  <canvas class="stg__ether" id="ether"></canvas>
+  <!-- background -->
+  <div class="stg__clouds"><div class="stg__cloud c1"></div><div class="stg__cloud c2"></div><div class="stg__cloud c3"></div></div>
+  <div class="stg__glyphs" id="glyphs" aria-hidden="true">
+    <span class="k1">雷</span><span class="k2">霹靂一閃</span><span class="k3">壱ノ型</span><span class="k4">神速</span>
+  </div>
+  <canvas class="stg__wind" id="wind"></canvas>
+  <!-- floating dust / spark particles -->
+  <canvas class="stg__particles" id="particles"></canvas>
+
+  <!-- falling text (drops with Zenitsu — scene 0/1) -->
+  <div class="stg__falltext" id="fallText" aria-hidden="true">
+    <span style="--fx:14vw;--fd:0s">墜落</span>
+    <span style="--fx:30vw;--fd:-3s">雷</span>
+    <span style="--fx:52vw;--fd:-6s">神速</span>
+    <span style="--fx:70vw;--fd:-1.5s">落雷</span>
+    <span style="--fx:86vw;--fd:-4.5s">閃光</span>
+    <span style="--fx:42vw;--fd:-7.5s">FALLING</span>
+    <span style="--fx:62vw;--fd:-9s">墜ちる</span>
+  </div>
+
+  <!-- hero title (behind figure) -->
+  <div class="stg__hero" id="hero">
+    <span class="ik">AURA · SAYED SADIQ</span>
+    <h1 class="identity-name">SAYED <em>SADIQ</em></h1>
+    <p class="identity-role">CREATIVE DEVELOPER · DIGITAL BUILDER</p>
+    <p>ZENITSU AGATSUMA — THUNDERCLAP AND FLASH</p>
+  </div>
+
+  <!-- split reveal (scene 3) -->
+  <div class="stg__split" id="split">
+    <img class="bot" src="./img/top.png" alt="Sleeping Zenitsu">
+    <img class="top" id="splitTop" src="./img/bottom.png" alt="Awakened Zenitsu">
+    <div class="veil"></div>
+    <div class="line" id="splitLine"></div>
+    <canvas class="spk" id="splitSpark"></canvas>
+    <div class="split__kanji" aria-hidden="true">霹靂一閃</div>
+    <div class="card card--l">
+      <span class="k">壱ノ型 · 序</span>
+      <h3>Thunderclap<br>&amp; Flash</h3>
+      <p>眠りの中でこそ、彼は誰よりも強い。<br>恐れは消え、雷だけが残る。</p>
+    </div>
+    <div class="card card--r">
+      <span class="k">Asleep → Awake</span>
+      <h3>神鳴り</h3>
+      <p>刃を引け。まどろむ刹那、雷神の速さが目を覚ます。<br>Drag the blade — the god of thunder wakes.</p>
+    </div>
+  </div>
+
+  <!-- ground crack -->
+  <div class="stg__floor" id="floor"><canvas id="crack"></canvas></div>
+
+  <!-- impact / running headline (scene 1) -->
+  <div class="stg__impact" id="impact" aria-hidden="true">
+    <span class="ik">霹靂一閃 · 六連</span>
+    <h2>THUNDERCLAP <em>&amp; FLASH</em></h2>
+    <p class="lead">Sixfold. The ground shatters where he lands — and before the dust settles, he is already gone.</p>
+    <ul class="stats">
+      <li><b>神速</b><span>GODSPEED</span></li>
+      <li><b>壱ノ型</b><span>FIRST FORM</span></li>
+      <li><b>六連</b><span>SIXFOLD</span></li>
+    </ul>
+  </div>
+
+  <!-- blue thunder aura around the falling figure -->
+  <canvas class="stg__aura" id="fallAura"></canvas>
+
+  <!-- the two figures -->
+  <div class="stg__fig" id="figFall"><img src="./img/falling.png" alt="Zenitsu"></div>
+  <div class="stg__fig" id="figHoriz">
+    <img class="ghost g3" src="./img/horizontal-run.png" alt="" aria-hidden="true">
+    <img class="ghost g2" src="./img/horizontal-run.png" alt="" aria-hidden="true">
+    <img class="ghost g1" src="./img/horizontal-run.png" alt="" aria-hidden="true">
+    <img class="lead-img" src="./img/horizontal-run.png" alt="Zenitsu dashing">
+  </div>
+
+  <!-- impact fx -->
+  <canvas class="stg__bolt" id="bolt"></canvas>
+  <div class="stg__shock" id="shock"></div>
+  <div class="stg__flash" id="flash"></div>
+</main>
+
+<div class="hint" id="hint">✦ DRAG ACROSS TO AWAKEN ✦</div>
+
+<!-- ================= NAV ================= -->
+<nav class="nav">
+  <button id="btnPrev" aria-label="Previous"><span class="arw arw--l">❮</span></button>
+  <div class="meta">
+    <div class="dots"><i class="dot" data-d="0"></i><i class="dot" data-d="1"></i><i class="dot" data-d="2"></i></div>
+    <div class="label" id="navLabel">I · THE FALL</div>
+  </div>
+  <button id="btnNext" aria-label="Next"><span class="arw arw--r">❯</span></button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(function(){
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const DPR = Math.min(devicePixelRatio||1, 2);           // DPR-capped canvases
+  const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+
+  /* user-gesture gate: browsers block WebAudio until first interaction */
+  let userInteracted=false;
+  ['pointerdown','touchstart','keydown','wheel'].forEach(ev=>
+    addEventListener(ev,()=>{userInteracted=true;},{once:true,passive:true}));
+
+  /* =====================================================================
+     A · REALISTIC LIGHTNING ENGINE  (midpoint-displacement fractal bolts,
+     restrikes on the same channel, 4 draw layers, palette-driven)
+  ===================================================================== */
+  const PAL={corona:'255,180,60',haze:'255,217,74',sheath:'214,236,255',core:'255,255,255',glow:'150,205,255',sky:'255,205,90'};
+  function boltPath(x1,y1,x2,y2,rough){
+    let pts=[{x:x1,y:y1},{x:x2,y:y2}], off=rough;
+    for(let it=0;it<6;it++){
+      const np=[pts[0]];
+      for(let i=1;i<pts.length;i++){
+        const a=pts[i-1],b=pts[i];
+        np.push({x:(a.x+b.x)/2+(Math.random()-0.5)*off,
+                 y:(a.y+b.y)/2+(Math.random()-0.5)*off*0.35});
+        np.push(b);
+      }
+      pts=np; off*=0.5;
+    }
+    return pts;
+  }
+  function buildStrike(x1,y1,x2,y2,rough){
+    const main=boltPath(x1,y1,x2,y2,rough), branches=[];
+    const total=Math.hypot(x2-x1,y2-y1), n=2+((Math.random()*2)|0);
+    for(let b=0;b<n;b++){
+      const i=(main.length*(0.18+Math.random()*0.5))|0;
+      const p=main[i], q=main[Math.min(main.length-1,i+6)];
+      const ang=Math.atan2(q.y-p.y,q.x-p.x)+(Math.random()<0.5?-1:1)*(0.35+Math.random()*0.55);
+      const len=total*(0.14+Math.random()*0.2);
+      branches.push(boltPath(p.x,p.y,p.x+Math.cos(ang)*len,p.y+Math.sin(ang)*len,rough*0.5));
+    }
+    return {main,branches,top:{x:x1,y:y1}};
+  }
+  function strokePts(ctx,pts,w,style,blur,blurColor){
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.lineWidth=w; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.strokeStyle=style;
+    if(blur){ctx.shadowBlur=blur;ctx.shadowColor=blurColor;}
+    ctx.stroke(); ctx.shadowBlur=0;
+  }
+  function drawStrike(ctx,st,coreW,a,skyR){
+    if(a<=0.01) return;
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    if(skyR){
+      const g=ctx.createRadialGradient(st.top.x,st.top.y,0,st.top.x,st.top.y,skyR);
+      g.addColorStop(0,'rgba('+PAL.sky+','+(a*0.18)+')');
+      g.addColorStop(0.5,'rgba('+PAL.sky+','+(a*0.06)+')');
+      g.addColorStop(1,'rgba('+PAL.sky+',0)');
+      ctx.fillStyle=g; ctx.fillRect(st.top.x-skyR,st.top.y-skyR*0.4,skyR*2,skyR*1.6);
+    }
+    ctx.translate((Math.random()-0.5)*1.8,(Math.random()-0.5)*1.2);
+    strokePts(ctx,st.main,coreW*9  ,'rgba('+PAL.corona+','+(a*0.05)+')');
+    strokePts(ctx,st.main,coreW*3.6,'rgba('+PAL.haze  +','+(a*0.14)+')');
+    strokePts(ctx,st.main,coreW*1.5,'rgba('+PAL.sheath+','+(a*0.5) +')');
+    strokePts(ctx,st.main,coreW*0.55,'rgba('+PAL.core +','+a+')',14,'rgba('+PAL.glow+','+a+')');
+    for(const br of st.branches){
+      strokePts(ctx,br,coreW*1.5 ,'rgba('+PAL.haze  +','+(a*0.09)+')');
+      strokePts(ctx,br,coreW*0.65,'rgba('+PAL.sheath+','+(a*0.34)+')');
+      strokePts(ctx,br,coreW*0.28,'rgba('+PAL.core  +','+(a*0.62)+')');
+    }
+    ctx.restore();
+  }
+  /* restrike: main flash → dark gap → 2–3 dimming return strokes */
+  function strikeSeq(draw,onFlash,onDone,big){
+    const seq=big?[1,0.22,0.9,0.08,0.6,0,0.38,0,0.18]:[0.85,0.12,0.5,0,0.26,0,0.12];
+    let acc=0;
+    seq.forEach((a,i)=>{ acc += i?36+Math.random()*80:0; setTimeout(()=>{draw(a);onFlash(a);},acc); });
+    setTimeout(onDone, acc+130);
+  }
+
+  /* =====================================================================
+     B · LAYERED THUNDER (crack + rolling body + sub rumble) — gated
+  ===================================================================== */
+  let actx=null;
+  function thunderSound(vol,dur){
+    if(!userInteracted||reduced) return;
+    vol=vol||0.8; dur=dur||2.3;
+    try{
+      actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      if(actx.state==='suspended') actx.resume();
+      const sr=actx.sampleRate, now=actx.currentTime;
+      const cn=(sr*0.14)|0, cb=actx.createBuffer(1,cn,sr), cd=cb.getChannelData(0);
+      for(let i=0;i<cn;i++){const t=i/cn; cd[i]=(Math.random()*2-1)*Math.pow(1-t,3);}
+      const cs=actx.createBufferSource(); cs.buffer=cb;
+      const hp=actx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1400;
+      const cg=actx.createGain(); cg.gain.value=vol*0.4; cs.connect(hp);hp.connect(cg);cg.connect(actx.destination);cs.start(now);
+      const n=(sr*dur)|0, buf=actx.createBuffer(1,n,sr), d=buf.getChannelData(0); let roll=1;
+      for(let i=0;i<n;i++){const t=i/n; if((i&1023)===0){roll+=(Math.random()-0.5)*0.34;roll=Math.max(0.25,Math.min(1.25,roll));} d[i]=(Math.random()*2-1)*Math.pow(1-t,1.7)*roll;}
+      const src=actx.createBufferSource(); src.buffer=buf;
+      const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(520,now); lp.frequency.exponentialRampToValueAtTime(140,now+dur*0.8);
+      const g=actx.createGain(); g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(vol,now+0.06); g.gain.exponentialRampToValueAtTime(0.0001,now+dur);
+      src.connect(lp);lp.connect(g);g.connect(actx.destination);src.start(now+0.03);
+      const sn=(sr*dur*1.1)|0, sb=actx.createBuffer(1,sn,sr), sd=sb.getChannelData(0);
+      for(let i=0;i<sn;i++){const t=i/sn; sd[i]=(Math.random()*2-1)*Math.pow(1-t,1.4);}
+      const ss=actx.createBufferSource(); ss.buffer=sb;
+      const slp=actx.createBiquadFilter(); slp.type='lowpass'; slp.frequency.value=70;
+      const sg=actx.createGain(); sg.gain.setValueAtTime(0.0001,now); sg.gain.exponentialRampToValueAtTime(vol*0.95,now+0.09); sg.gain.exponentialRampToValueAtTime(0.0001,now+dur*1.1);
+      ss.connect(slp);slp.connect(sg);sg.connect(actx.destination);ss.start(now+0.02);
+    }catch(e){}
+  }
+
+  /* =====================================================================
+     C · CURSOR + CLOCK
+  ===================================================================== */
+  const cursor=document.getElementById('cursor');
+  addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px';});
+  setInterval(()=>{document.getElementById('hudClock').textContent=new Date().toTimeString().slice(0,8);},1000);
+
+  /* =====================================================================
+     D · PRELOADER
+  ===================================================================== */
+  const pre=document.getElementById('pre');
+  const load={v:0};
+  gsap.set(pre,{clipPath:'polygon(0 0,100% 0,100% 100%,0 100%)'});
+  gsap.timeline()
+    .to('.pre__k',{opacity:1,scale:1,duration:.7,ease:'power2.out',startAt:{scale:.85}})
+    .to('.pre__sub',{opacity:1,duration:.5},'-=.3')
+    .to(load,{v:100,duration:reduced?0.3:1.3,ease:'power1.inOut',onUpdate(){document.getElementById('preFill').style.width=load.v+'%';}},'<')
+    .add(()=>pre.classList.add('slashing'))
+    .to(pre,{clipPath:'polygon(0 0,100% 0,100% 0,0 0)',duration:.55,ease:'power3.inOut',delay:.25})
+    .set(pre,{display:'none'});
+
+  /* =====================================================================
+     E · STAGE CANVAS SIZING
+  ===================================================================== */
+  const stage=document.getElementById('stage');
+  const windC=document.getElementById('wind'), wctx=windC.getContext('2d');
+  const boltC=document.getElementById('bolt'), bctx=boltC.getContext('2d');
+  const floor=document.getElementById('floor');
+  const crackC=document.getElementById('crack'), cctx=crackC.getContext('2d');
+  const splitSpark=document.getElementById('splitSpark'), spctx=splitSpark.getContext('2d');
+  const etherC=document.getElementById('ether'), ectx=etherC.getContext('2d');
+  const auraC=document.getElementById('fallAura'), auraCtx=auraC.getContext('2d');
+  let W=0,H=0,cx=0;
+  let cracks=[];
+  function buildCracks(){
+    cracks=[]; const fw=floor.clientWidth||W, fh=floor.clientHeight||H*0.5;
+    const ox=fw/2, oy=6, n=7;
+    for(let i=0;i<n;i++){
+      const ang=(-Math.PI/2)+((i/(n-1))-0.5)*Math.PI*1.4, len=fh*0.95*(0.5+Math.random()*0.5);
+      const pts=boltPath(ox,oy,ox+Math.cos(ang)*len,oy+Math.abs(Math.sin(ang))*len,fw*0.06);
+      cracks.push(pts);
+      if(Math.random()<0.8){ const bi=(pts.length*(0.4+Math.random()*0.3))|0, p=pts[bi];
+        const a2=ang+(Math.random()<0.5?-1:1)*0.6, l2=len*0.4;
+        cracks.push(boltPath(p.x,p.y,p.x+Math.cos(a2)*l2,p.y+Math.abs(Math.sin(a2))*l2,fw*0.04)); }
+    }
+  }
+  function size(){
+    W=stage.clientWidth; H=stage.clientHeight; cx=W/2;
+    [windC,boltC,splitSpark,etherC,auraC].forEach(c=>{c.width=W*DPR;c.height=H*DPR;});
+    wctx.setTransform(DPR,0,0,DPR,0,0); bctx.setTransform(DPR,0,0,DPR,0,0); spctx.setTransform(DPR,0,0,DPR,0,0);
+    ectx.setTransform(DPR,0,0,DPR,0,0); auraCtx.setTransform(DPR,0,0,DPR,0,0);
+    const fw=floor.clientWidth, fh=floor.clientHeight;
+    crackC.width=fw*DPR; crackC.height=fh*DPR; cctx.setTransform(DPR,0,0,DPR,0,0);
+    buildCracks();
+  }
+  size(); addEventListener('resize',()=>{size(); layoutCorner();});
+
+  /* --- ambient speed-lines (wind) --- */
+  const streaks=[]; for(let i=0;i<70;i++) streaks.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,len:40+Math.random()*120});
+  let windPower=0;
+  (function wind(){
+    requestAnimationFrame(wind);
+    wctx.clearRect(0,0,W,H); if(reduced) return;
+    wctx.globalCompositeOperation='lighter'; wctx.lineCap='round';
+    const base=1+windPower*20;
+    for(const s of streaks){
+      s.y-=base+s.len*0.03;
+      if(s.y<-s.len){ s.y=H+Math.random()*40; s.x=Math.random()*W; s.len=40+Math.random()*120; }
+      const a=0.04+windPower*0.26;
+      const g=wctx.createLinearGradient(s.x,s.y,s.x,s.y+s.len);
+      g.addColorStop(0,'rgba(214,236,255,0)'); g.addColorStop(0.5,'rgba(214,236,255,'+a+')'); g.addColorStop(1,'rgba(126,200,255,0)');
+      wctx.strokeStyle=g; wctx.lineWidth=1+windPower*1.6;
+      wctx.beginPath(); wctx.moveTo(s.x,s.y); wctx.lineTo(s.x,s.y+s.len); wctx.stroke();
+    }
+    windPower*=0.94; wctx.globalCompositeOperation='source-over';
+  })();
+
+  /* --- LIQUID ETHER background (flowing soft blobs, cursor-reactive) --- */
+  const ETH_COLS=[[126,200,255],[255,217,74],[90,120,210],[170,140,255],[80,180,220]];
+  const ethBlobs=[];
+  for(let i=0;i<7;i++) ethBlobs.push({
+    x:Math.random(),y:Math.random(),
+    vx:(Math.random()-0.5)*0.0007,vy:(Math.random()-0.5)*0.0007,
+    r:0.26+Math.random()*0.34,col:ETH_COLS[i%ETH_COLS.length],ph:Math.random()*6.28});
+  let ethMx=0.5,ethMy=0.5,ethT=0;
+  addEventListener('mousemove',e=>{ethMx=e.clientX/innerWidth;ethMy=e.clientY/innerHeight;});
+  (function ether(){
+    if(!reduced) requestAnimationFrame(ether);
+    ectx.clearRect(0,0,W,H); ethT+=0.005;
+    ectx.globalCompositeOperation='lighter';
+    const M=Math.max(W,H);
+    for(const b of ethBlobs){
+      if(!reduced){
+        b.ph+=0.003;
+        b.x+=b.vx+Math.cos(b.ph)*0.00045+(ethMx-b.x)*0.0009;
+        b.y+=b.vy+Math.sin(b.ph*0.9)*0.00045+(ethMy-b.y)*0.0009;
+        if(b.x<-0.3)b.x=1.3; else if(b.x>1.3)b.x=-0.3;
+        if(b.y<-0.3)b.y=1.3; else if(b.y>1.3)b.y=-0.3;
+      }
+      const px=b.x*W,py=b.y*H,pr=b.r*M*(0.9+0.1*Math.sin(ethT+b.ph)),c=b.col;
+      const g=ectx.createRadialGradient(px,py,0,px,py,pr);
+      g.addColorStop(0,'rgba('+c[0]+','+c[1]+','+c[2]+',0.17)');
+      g.addColorStop(0.42,'rgba('+c[0]+','+c[1]+','+c[2]+',0.065)');
+      g.addColorStop(1,'rgba('+c[0]+','+c[1]+','+c[2]+',0)');
+      ectx.fillStyle=g; ectx.beginPath(); ectx.arc(px,py,pr,0,6.2832); ectx.fill();
+    }
+    ectx.globalCompositeOperation='source-over';
+  })();
+
+  /* --- BLUE THUNDER AURA around the falling figure (scene 0) --- */
+  function strokeBlue(ctx,pts,w,a){
+    strokePts(ctx,pts,w*7  ,'rgba(60,120,220,'+(a*0.06)+')');
+    strokePts(ctx,pts,w*3  ,'rgba(126,200,255,'+(a*0.16)+')');
+    strokePts(ctx,pts,w*1.3,'rgba(180,225,255,'+(a*0.5) +')');
+    strokePts(ctx,pts,w*0.5,'rgba(240,250,255,'+a+')',12,'rgba(126,200,255,'+a+')');
+  }
+  let auraBolts=[];
+  function spawnAura(){
+    const cyp=H*0.46, n=1+((Math.random()*2)|0);
+    for(let i=0;i<n;i++){
+      const ang=Math.random()*6.2832, r0=H*0.09+Math.random()*H*0.09, r1=H*0.20+Math.random()*H*0.16;
+      const p0={x:cx+Math.cos(ang)*r0,y:cyp+Math.sin(ang)*r0*0.85};
+      const p1={x:cx+Math.cos(ang)*r1,y:cyp+Math.sin(ang)*r1*0.85};
+      auraBolts.push({st:buildStrike(p0.x,p0.y,p1.x,p1.y,H*0.04),life:1,w:0.85+Math.random()*0.8});
+    }
+  }
+  function auraLoop(){
+    requestAnimationFrame(auraLoop);
+    auraCtx.clearRect(0,0,W,H);
+    if(scene!==0||reduced) return;                       // `scene` defined later — deferred start below
+    if(Math.random()<0.20) spawnAura();
+    auraCtx.globalCompositeOperation='lighter';
+    for(let i=auraBolts.length-1;i>=0;i--){
+      const b=auraBolts[i]; b.life-=0.08;
+      if(b.life<=0){ auraBolts.splice(i,1); continue; }
+      strokeBlue(auraCtx,b.st.main,b.w,b.life);
+      for(const br of b.st.branches) strokeBlue(auraCtx,br,b.w*0.6,b.life*0.7);
+    }
+    auraCtx.globalCompositeOperation='source-over';
+  }
+  requestAnimationFrame(auraLoop);                        // starts next frame, after `scene` initialises
+
+  function drawCracks(reveal){
+    const fw=floor.clientWidth, fh=floor.clientHeight;
+    cctx.clearRect(0,0,fw,fh); if(reveal<=0.01) return;
+    cctx.globalCompositeOperation='lighter'; cctx.lineJoin='round'; cctx.lineCap='round';
+    for(const pts of cracks){
+      const upto=Math.max(2,(pts.length*reveal)|0);
+      cctx.strokeStyle='rgba(255,217,74,'+(0.5*reveal)+')'; cctx.lineWidth=6;
+      cctx.shadowBlur=20; cctx.shadowColor='rgba(255,200,90,'+(0.8*reveal)+')';
+      cctx.beginPath(); cctx.moveTo(pts[0].x,pts[0].y);
+      for(let i=1;i<upto;i++) cctx.lineTo(pts[i].x,pts[i].y);
+      cctx.stroke();
+      cctx.shadowBlur=8; cctx.shadowColor='rgba(126,200,255,'+reveal+')';
+      cctx.strokeStyle='rgba(234,246,255,'+reveal+')'; cctx.lineWidth=1.6; cctx.stroke(); cctx.shadowBlur=0;
+    }
+    cctx.globalCompositeOperation='source-over';
+  }
+
+  /* =====================================================================
+     F · HEAVY THUNDER  (bottom-center, ground→sky, in intervals)
+  ===================================================================== */
+  const flash=document.getElementById('flash'), shock=document.getElementById('shock');
+  let storming=false;
+  function heavyThunder(){
+    if(storming) return;
+    if(reduced){ gsap.fromTo(flash,{opacity:.3},{opacity:0,duration:.3}); return; }
+    storming=true;
+    thunderSound(1,3);
+    const gy=H*0.92;
+    const strikes=[
+      {st:buildStrike(cx+(Math.random()-0.5)*40, gy, cx+(Math.random()-0.5)*W*0.18, -20, W*0.15), w:2.8, k:1},
+      {st:buildStrike(cx+(Math.random()<0.5?-1:1)*W*0.22, gy, cx+(Math.random()-0.5)*W*0.24, H*0.06, W*0.12), w:1.6, k:0.6},
+      {st:buildStrike(cx+(Math.random()<0.5?-1:1)*W*0.34, gy, cx+(Math.random()-0.5)*W*0.3, H*0.2, W*0.1), w:1.1, k:0.4}
+    ];
+    strikeSeq(
+      a=>{ bctx.clearRect(0,0,W,H); strikes.forEach((s,i)=>drawStrike(bctx,s.st,s.w,a*s.k, i===0?W*0.5:0)); },
+      a=>{ flash.style.opacity=(a*0.45).toFixed(2); },
+      ()=>{ bctx.clearRect(0,0,W,H); flash.style.opacity=0; storming=false; },
+      true
+    );
+    gsap.fromTo(shock,{scale:0,opacity:0.9},{scale:36,opacity:0,duration:1,ease:'power2.out'});
+    shake();
+  }
+  function shake(){
+    if(reduced) return;
+    let f=0; const max=18;
+    (function sh(){ f++; const damp=Math.max(0,1-f/max), k=16*damp;
+      stage.style.transform='translate('+((Math.random()-0.5)*k).toFixed(1)+'px,'+((Math.random()-0.5)*k).toFixed(1)+'px)';
+      if(f<max) requestAnimationFrame(sh); else stage.style.transform='translate(0,0)';
+    })();
+  }
+  let heavyTimer=null;
+  function startHeavy(minGap){
+    stopHeavy();
+    const loop=()=>{ heavyThunder(); heavyTimer=setTimeout(loop,(minGap||1700)+Math.random()*1300); };
+    heavyTimer=setTimeout(loop,260);
+  }
+  function stopHeavy(){ if(heavyTimer){clearTimeout(heavyTimer);heavyTimer=null;} }
+
+  /* light gold flicker (scene 0 ambience) */
+  function fallThunder(power){
+    if(reduced||storming) return; storming=true;
+    const sx=W*(0.2+Math.random()*0.6);
+    const st=buildStrike(sx,-20, sx+(Math.random()-0.5)*W*0.18, H*(0.5+Math.random()*0.35), W*0.15);
+    strikeSeq(
+      a=>{ bctx.clearRect(0,0,W,H); drawStrike(bctx,st,1.8*Math.max(power,0.5),a*power,W*0.3); },
+      a=>{ flash.style.opacity=(a*power*0.2).toFixed(2); },
+      ()=>{ bctx.clearRect(0,0,W,H); flash.style.opacity=0; storming=false; },
+      power>0.7
+    );
+    if(power>0.7) thunderSound(0.5*power,1.5);
+  }
+
+  /* =====================================================================
+     G · FIGURES + SCENE STATE MACHINE  (button driven)
+     Scene 0 · THE FALL   — falling.png large, over the title, floating
+     Scene 1 · THE IMPACT — drops, heavy bottom-center thunder + crack,
+                            big horizontal.png rises in the same spot
+     Scene 2 · AWAKENING  — horizontal zooms out to bottom-left corner and
+                            merges into the top↔bottom slash slider
+  ===================================================================== */
+  const hero=document.getElementById('hero');
+  const glyphs=document.getElementById('glyphs');
+  const fallText=document.getElementById('fallText');
+  const figFall=document.getElementById('figFall');
+  const figHoriz=document.getElementById('figHoriz');
+  const impact=document.getElementById('impact');
+  const split=document.getElementById('split');
+  const hint=document.getElementById('hint');
+  const hudState=document.getElementById('hudState');
+  const navLabel=document.getElementById('navLabel');
+  const btnPrev=document.getElementById('btnPrev'), btnNext=document.getElementById('btnNext');
+  const dots=[].slice.call(document.querySelectorAll('.dot'));
+
+  gsap.set(figFall,{xPercent:-50,yPercent:-50,y:-8,scale:1,opacity:1});
+  gsap.set(figHoriz,{xPercent:-50,yPercent:-50,y:0,scale:1,opacity:0});
+
+  // gentle idle float for the falling figure (scene 0)
+  let idle=gsap.to(figFall,{y:'+=26',duration:2.6,yoyo:true,repeat:-1,ease:'sine.inOut'});
+  function killIdle(){ if(idle){idle.kill();idle=null;} }
+  function startIdle(){ killIdle(); idle=gsap.to(figFall,{y:'+=26',duration:2.6,yoyo:true,repeat:-1,ease:'sine.inOut'}); }
+
+  // corner target for the horizontal figure (bottom-left)
+  const CORNER_SCALE=0.34;
+  let cornerX=0, cornerY=0;
+  function layoutCorner(){
+    // anchor to viewport fractions → reliably lands in the bottom-left corner
+    cornerX = -(W/2) + W*0.12;
+    cornerY =  (H/2) - H*0.15;
+  }
+  layoutCorner();
+  const hImg=figHoriz.querySelector('img'); if(hImg) hImg.addEventListener('load',layoutCorner);
+
+  let scene=0, busy=false;
+  const LABELS=['I · THE FALL','II · THE IMPACT','III · AWAKENING'];
+  const STATES=['STATE: DESCENDING','STATE: 神速 · SIXFOLD','STATE: AWAKENING'];
+  function paintNav(){
+    dots.forEach((d,i)=>d.classList.toggle('on',i===scene));
+    navLabel.textContent=LABELS[scene];
+    hudState.textContent=STATES[scene];
+    btnPrev.disabled=scene===0; btnNext.disabled=scene===2;
+    hint.style.opacity=(scene===2)?1:0;
+    glyphs.style.opacity=(scene===0)?1:0;
+    fallText.style.opacity=(scene===0)?1:0;
+    auraC.style.opacity=(scene===0)?1:0;
+  }
+
+  /* ---- transitions ---- */
+  function toFall(reverse){                             // → scene 0
+    stopHeavy(); killIdle();
+    splitActive=false; split.style.pointerEvents='none';
+    gsap.to(split,{opacity:0,duration:.5});
+    gsap.to(floor,{opacity:0,duration:.4,onComplete:()=>drawCracks(0)});
+    gsap.to(figHoriz,{opacity:0,duration:.4});
+    gsap.to(impact,{opacity:0,duration:.35});
+    figHoriz.classList.remove('no-trail');
+    gsap.to(hero,{opacity:1,duration:.5});
+    if(reverse){
+      // fall played in REVERSE — he rises back up out of the impact and settles
+      windPower=1;
+      gsap.set(figFall,{scale:1,opacity:0,y:H*0.36,filter:'blur(8px) brightness(1.7)'});
+      gsap.timeline()
+        .to(figFall,{opacity:1,y:-H*0.18,filter:'blur(0px) brightness(1)',duration:1.4,ease:'power2.out'})
+        .to(figFall,{y:-8,duration:.5,ease:'sine.inOut',onComplete:startIdle});
+    }else{
+      gsap.set(figFall,{scale:1});
+      gsap.to(figFall,{opacity:1,scale:1,y:-8,duration:.5,filter:'blur(0px) brightness(1)',onComplete:startIdle});
+    }
+  }
+  function toImpact(fromFall){                          // → scene 1
+    killIdle();
+    gsap.to(hero,{opacity:0,duration:.35});
+    splitActive=false; split.style.pointerEvents='none';
+    gsap.to(split,{opacity:0,duration:.4});
+    const showHoriz=()=>{
+      figHoriz.classList.remove('no-trail');            // running trail visible
+      windPower=1;                                      // speed-lines kick in as he runs
+      // he runs IN from the left, settling at centre a little bigger
+      gsap.set(figHoriz,{x:-W*0.5,y:0,scale:.92,opacity:0});
+      gsap.to(figHoriz,{opacity:1,duration:.35,ease:'power1.out'});
+      gsap.to(figHoriz,{x:0,scale:1.12,duration:1.05,ease:'power2.out'});
+      gsap.fromTo(impact,{opacity:0,y:24},{opacity:1,y:0,duration:.7,ease:'power2.out',delay:.4});
+      floor.style.opacity=1;
+      let cr={v:0}; gsap.to(cr,{v:1,duration:.7,ease:'power2.out',onUpdate:()=>drawCracks(cr.v)});
+      startHeavy(1700);                                 // heavy thunder in intervals
+      busy=false;
+    };
+    if(fromFall){
+      windPower=1;
+      // longer fall: lift a touch, then a slow accelerating plunge
+      gsap.timeline()
+        .to(figFall,{y:-H*0.18,duration:.65,ease:'power1.out'})
+        .to(figFall,{y:H*0.36,duration:1.75,ease:'power2.in',onComplete:()=>{
+          heavyThunder();                                // the landing blast
+          gsap.to(figFall,{opacity:0,y:'-=70',filter:'blur(10px) brightness(2.4)',duration:.5,ease:'power2.out'});
+          showHoriz();
+        }});
+    }else{
+      gsap.to(figFall,{opacity:0,duration:.3});
+      showHoriz();
+    }
+  }
+  function toAwaken(){                                  // → scene 2
+    stopHeavy();
+    gsap.to(hero,{opacity:0,duration:.3});
+    gsap.to(impact,{opacity:0,duration:.3});
+    figHoriz.classList.add('no-trail');                 // drop the running trail for the corner pose
+    gsap.to(figFall,{opacity:0,duration:.3});
+    layoutCorner();
+    gsap.to(figHoriz,{x:cornerX,y:cornerY,scale:CORNER_SCALE,duration:1,ease:'power3.inOut',onComplete:()=>{busy=false;}});
+    cornerBaseX=cornerX;
+    gsap.to(floor,{opacity:0,duration:.5,onComplete:()=>drawCracks(0)});
+    split.style.pointerEvents='auto';
+    gsap.to(split,{opacity:1,duration:.7,delay:.25});
+    splitActive=true; resetSplit();
+    startHeavy(2800);                                    // slower ambient rumble
+  }
+
+  function go(n){
+    n=clamp(n,0,2); if(n===scene||busy) return;
+    busy=true; const prev=scene; scene=n; paintNav();
+    if(n===0) { toFall(prev===1); busy=false; }
+    else if(n===1) toImpact(prev===0);
+    else if(n===2) toAwaken();
+    if(n!==1 && n!==2 && !busy) busy=false;
+  }
+  btnNext.addEventListener('click',()=>go(scene+1));
+  btnPrev.addEventListener('click',()=>go(scene-1));
+  addEventListener('keydown',e=>{ if(e.key==='ArrowRight')go(scene+1); if(e.key==='ArrowLeft')go(scene-1); });
+
+  // scene-0 ambient flicker
+  setInterval(()=>{ if(scene===0 && !document.hidden && !storming && Math.random()<0.4) fallThunder(0.4+Math.random()*0.5); },3200);
+  paintNav();
+
+  /* =====================================================================
+     H · SPLIT SLASH SLIDER  (scene 2) — reveals bottom.png; the corner
+     Zenitsu slides with the blade and heavy thunder fires on fast drags
+  ===================================================================== */
+  const splitTop=document.getElementById('splitTop');
+  const splitLine=document.getElementById('splitLine');
+  const TILT=16*Math.PI/180, TAN=Math.tan(TILT);
+  let sx=0.5, sTarget=0.5, lastX=0.5, lastApplied=-1, halfShift=0;
+  let splitActive=false, cornerBaseX=0, sparks=[], lastMoveBolt=0;
+  function resetSplit(){ sx=0.02; sTarget=0.02; lastApplied=-1; }
+
+  function setPointer(clientX,clientY){
+    if(!splitActive) return;
+    const r=stage.getBoundingClientRect();
+    halfShift=(H/2)*TAN;
+    const edge=W?halfShift/W:0;
+    const raw=(clientX-r.left)/W;
+    sTarget=Math.min(1+edge,Math.max(-edge,raw*(1+edge*2)-edge));
+    hint.style.opacity=0;
+    const py=clientY-r.top, speed=Math.abs(sTarget-lastX);
+    const n=Math.min(12,Math.floor(speed*160));
+    for(let i=0;i<n;i++) sparks.push({x:sTarget*W+(Math.random()-0.5)*10,y:py+(Math.random()-0.5)*80,
+      vx:(Math.random()-0.5)*4,vy:(Math.random()-0.7)*3,r:0.8+Math.random()*2,life:1,
+      col:Math.random()<0.5?'234,246,255':'255,217,74'});
+    const now=performance.now();
+    // heavy thunder fires continuously as the blade slides
+    if(speed>0.008 && now-lastMoveBolt>320){ lastMoveBolt=now; heavyThunder(); }
+    lastX=sTarget;
+  }
+  stage.addEventListener('mousemove',e=>setPointer(e.clientX,e.clientY));
+  stage.addEventListener('touchmove',e=>{const t=e.touches[0];setPointer(t.clientX,t.clientY);},{passive:true});
+
+  (function splitFrame(){
+    requestAnimationFrame(splitFrame);
+    if(!splitActive){ if(sparks.length){spctx.clearRect(0,0,W,H);sparks.length=0;} return; }
+    halfShift=(H/2)*TAN;
+    sx += (sTarget-sx)*0.24;
+    if(Math.abs(sx-lastApplied)>0.0004){
+      const px=sx*W, xTop=px-halfShift, xBot=px+halfShift;
+      splitTop.style.clipPath='polygon(0 0,'+xTop.toFixed(1)+'px 0,'+xBot.toFixed(1)+'px '+H+'px,0 '+H+'px)';
+      splitLine.style.transform='translateX('+px.toFixed(1)+'px) rotate(16deg)';
+      splitLine.style.opacity=Math.min(1,Math.abs(sTarget-sx)*6+0.4).toFixed(2);
+      // small Zenitsu rides the blade the FULL width — far left → far right
+      const leftX=-(W/2)+W*0.12, rightX=(W/2)-W*0.12;
+      gsap.set(figHoriz,{x:leftX+clamp(sx,0,1)*(rightX-leftX)});
+      lastApplied=sx;
+    }
+    if(sparks.length){
+      spctx.clearRect(0,0,W,H); spctx.globalCompositeOperation='lighter';
+      for(let i=sparks.length-1;i>=0;i--){
+        const p=sparks[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.life-=0.03;
+        if(p.life<=0){ sparks.splice(i,1); continue; }
+        spctx.beginPath(); spctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
+        spctx.fillStyle='rgba('+p.col+','+p.life+')'; spctx.fill();
+      }
+      spctx.globalCompositeOperation='source-over';
+    }
+  })();
+
+})();
+</script>
+</body>
+</html>
